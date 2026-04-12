@@ -58,7 +58,7 @@ Abra o MiniTool Partition Wizard, localize o cartão SD na lista de discos, cliq
 
 ## 4. Bootar o Multitool no TV Box
 
-Insira o cartão SD no TV Box com ele desligado. Ligue o TV Box — após alguns segundos o LED azul começa a piscar e o menu do Multitool aparece na tela.
+Insira o cartão SD no TV Box com ele desligado. Ligue o TV Box, após alguns segundos o LED azul começa a piscar e o menu do Multitool aparece na tela.
 
 Se o menu não aparecer e o Android iniciar normalmente, procure um buraco pequeno no TV Box chamado AV reset ou recovery e pressione com um clipe enquanto liga.
 
@@ -78,7 +78,7 @@ O menu do Multitool oferece as seguintes opções:
 
 ## 5. Conectar via SSH
 
-Conecte o TV Box ao roteador via cabo ethernet. No menu do Multitool, selecione a opção **4 — Drop to Bash shell**.
+Conecte o TV Box ao roteador via cabo ethernet. No menu do Multitool, selecione a opção **4 Drop to Bash shell**.
 
 Para obter o IP do TV Box, execute no terminal:
 
@@ -132,7 +132,7 @@ printf "GET /nome-da-imagem.img HTTP/1.0\r\nHost: 192.168.x.x\r\nConnection: clo
 head -c 500 <&3 | od -A d -c | head -20
 ```
 
-O `od -A d -c` exibe o dump em decimal. Procure a sequência `\r \n \r \n` (fim do cabeçalho HTTP). O número na coluna da esquerda logo após essa sequência é o offset em bytes — geralmente entre 150 e 300 bytes.
+O `od -A d -c` exibe o dump em decimal. Procure a sequência `\r \n \r \n` (fim do cabeçalho HTTP). O número na coluna da esquerda logo após essa sequência é o offset em bytes, geralmente entre 150 e 300 bytes.
 
 ---
 
