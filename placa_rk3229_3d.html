@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rede RK3229 - Holograma de Dados Final</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#030508;font-family:'Segoe UI',sans-serif}
+#cc{width:100vw;height:100vh}
+#ip{position:absolute;top:20px;right:20px;width:300px;
+  background:linear-gradient(135deg,rgba(4,10,18,.95),rgba(6,15,26,.95));
+  color:#ddd;padding:18px 20px;border-radius:12px;
+  border:1px solid rgba(0,255,255,.3);
+  box-shadow:0 12px 50px rgba(0,255,255,.15);display:none;backdrop-filter:blur(12px)}
+#ip h2{margin:0 0 10px;color:#00ffff;font-size:.98rem;font-weight:600;
+  padding-bottom:8px;border-bottom:1px solid rgba(0,255,255,.25)}
+#ip p{margin:0;font-size:.82rem;line-height:1.7;color:#9bc}
+#cb{position:absolute;top:9px;right:11px;background:none;border:none;
+  color:#0ff;font-size:.95rem;cursor:pointer;padding:2px 5px;border-radius:3px}
+#cb:hover{color:#fff;background:rgba(0,255,255,.15)}
+.ins{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+  color:rgba(0,255,255,.5);background:rgba(0,10,20,.6);
+  padding:7px 16px;border-radius:18px;pointer-events:none;
+  font-size:.77rem;white-space:nowrap;border:1px solid rgba(0,255,255,.1)}
+#bl{position:absolute;top:20px;left:20px;
+  background:linear-gradient(135deg,rgba(4,10,18,.8),rgba(6,15,26,.8));
+  border:1px solid rgba(0,255,255,.2);border-radius:8px;
+  padding:8px 14px;color:#00ffff;font-size:.73rem;
+  font-family:monospace;letter-spacing:.06em}
+#hud{position:absolute;bottom:52px;left:20px;
+  background:linear-gradient(135deg,rgba(3,8,15,.92),rgba(5,12,22,.92));
+  border:1px solid rgba(0,255,255,.22);border-radius:10px;
+  padding:12px 16px;font-family:monospace;font-size:.72rem;
+  color:#8ab;min-width:210px;backdrop-filter:blur(10px);
+  box-shadow:0 4px 24px rgba(0,255,255,.1)}
+#hud .hl{color:#00ffff;font-weight:700;font-size:.7rem;letter-spacing:.1em;
+  margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(0,255,255,.15)}
+#hud .row{display:flex;align-items:center;gap:6px;margin:4px 0}
+#hud .lbl{width:38px;color:#7a9ab0;font-size:.67rem}
+#hud .bar{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+#hud .bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+#hud .val{width:72px;text-align:right;font-size:.67rem;color:#aed}
+.bar-cpu{background:linear-gradient(90deg,#00d4ff,#0088cc)}
+.bar-ram{background:linear-gradient(90deg,#44ff99,#00cc66)}
+.bar-net{background:linear-gradient(90deg,#ff9900,#ff6600)}
+.bar-emmc{background:linear-gradient(90deg,#bb88ff,#8844ff)}
+#hud .temp{font-size:.75rem;font-weight:700;padding:1px 5px;border-radius:4px}
+#hud .uprow{margin-top:6px;padding-top:5px;border-top:1px solid rgba(0,255,255,.1);
+  color:#6a8a9a;font-size:.65rem;display:flex;justify-content:space-between}
+/* Terminal SSH */
+#term-btn{position:absolute;bottom:52px;right:20px;
+  background:linear-gradient(135deg,rgba(3,8,15,.92),rgba(5,12,22,.92));
+  border:1px solid rgba(0,255,255,.3);border-radius:8px;
+  padding:7px 14px;color:#00ffff;font-size:.72rem;font-family:monospace;
+  cursor:pointer;letter-spacing:.06em;backdrop-filter:blur(10px);
+  transition:all .2s}
+#term-btn:hover{background:rgba(0,255,255,.12);border-color:rgba(0,255,255,.6)}
+#term-panel{position:absolute;bottom:100px;right:20px;width:480px;
+  background:#0a0f0a;border:1px solid #333;border-radius:10px;
+  overflow:hidden;display:none;
+  box-shadow:0 8px 40px rgba(0,0,0,.8);font-family:monospace}
+#term-bar{background:#1a1f1a;padding:7px 12px;display:flex;
+  align-items:center;justify-content:space-between;
+  border-bottom:1px solid #2a2f2a}
+#term-bar span{color:#888;font-size:.7rem;letter-spacing:.05em}
+#term-bar .dots{display:flex;gap:5px}
+#term-bar .dot{width:10px;height:10px;border-radius:50%}
+#term-body{padding:14px 16px;font-size:.75rem;line-height:1.65;
+  color:#cccccc;min-height:220px;white-space:pre}
+#term-cursor{display:inline-block;width:8px;height:14px;
+  background:#cccccc;animation:blink .8s step-end infinite;vertical-align:text-bottom}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── MOBILE ─────────────────────────────────────────────────────────────── */
+@media (max-width:640px){
+  #bl{font-size:.6rem;padding:5px 10px;top:10px;left:10px;letter-spacing:.03em}
+
+  /* Painel de info: full-width na base */
+  #ip{top:auto;bottom:0;right:0;left:0;width:100%;border-radius:12px 12px 0 0;
+    padding:14px 16px 20px;max-height:45vh;overflow-y:auto}
+
+  /* HUD: compacto no topo direito */
+  #hud{bottom:auto;top:10px;left:auto;right:10px;min-width:0;width:155px;
+    padding:8px 10px;font-size:.62rem}
+  #hud .hl{font-size:.6rem;margin-bottom:4px}
+  #hud .lbl{width:30px;font-size:.58rem}
+  #hud .val{width:58px;font-size:.58rem}
+  #hud .bar{height:4px}
+  #hud .temp{font-size:.65rem}
+  #hud .uprow{font-size:.56rem}
+
+  /* Instruções: menor e sem pipe */
+  .ins{font-size:.65rem;padding:5px 12px;bottom:8px;
+    white-space:normal;text-align:center;width:60%;line-height:1.4}
+
+  /* Botão terminal: abaixo do título */
+  #term-btn{bottom:auto;top:40px;left:10px;right:auto;
+    padding:5px 10px;font-size:.62rem}
+
+  /* Painel terminal: full-width na base */
+  #term-panel{width:100%;right:0;left:0;bottom:0;border-radius:10px 10px 0 0;
+    max-height:55vh}
+  #term-body{font-size:.65rem;min-height:160px;padding:10px 12px;
+    max-height:44vh;overflow-y:auto}
+  #term-bar span{font-size:.6rem}
+  #term-bar .dot{width:8px;height:8px}
+}
+</style>
+</head>
+<body>
+<div id="cc"></div>
+<div id="ip">
+  <button id="cb" onclick="closePanel()">x</button>
+  <h2 id="it"></h2><p id="id"></p>
+</div>
+<div id="bl">REDE RK3229 - ARQUITETURA DE DADOS</div>
+
+<!-- Terminal SSH ao vivo -->
+<button id="term-btn" onclick="toggleTerm()">&#9654; TERMINAL</button>
+<div id="term-panel">
+  <div id="term-bar">
+    <div class="dots">
+      <div class="dot" style="background:#ff5f57"></div>
+      <div class="dot" style="background:#febc2e"></div>
+      <div class="dot" style="background:#28c840"></div>
+    </div>
+    <span>root@rk322x-box</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="reboot-btn" onclick="confirmReboot()" style="
+        background:rgba(255,60,60,.15);border:1px solid rgba(255,80,80,.4);
+        color:#ff6666;font-family:monospace;font-size:.65rem;padding:2px 8px;
+        border-radius:4px;cursor:pointer;letter-spacing:.05em;transition:all .2s"
+        onmouseover="this.style.background='rgba(255,60,60,.35)'"
+        onmouseout="this.style.background='rgba(255,60,60,.15)'">
+        &#9211; REBOOT
+      </button>
+      <span id="term-status" style="color:#444">●</span>
+    </div>
+  </div>
+  <div id="term-body"></div>
+</div>
+<div class="ins" id="ins">Arraste para girar &nbsp;|&nbsp; Role para zoom &nbsp;|&nbsp; Clique nos nós</div>
+
+<div id="hud">
+  <div class="hl">TELEMETRIA AO VIVO</div>
+  <div class="row">
+    <span class="lbl">CPU</span>
+    <div class="bar"><div class="bar-fill bar-cpu" id="hcpu" style="width:0%"></div></div>
+    <span class="val"><span id="hcpuv">--</span>% <span id="htmp" class="temp">--°C</span></span>
+  </div>
+  <div class="row">
+    <span class="lbl">RAM</span>
+    <div class="bar"><div class="bar-fill bar-ram" id="hram" style="width:0%"></div></div>
+    <span class="val" id="hramv">-- MB</span>
+  </div>
+  <div class="row">
+    <span class="lbl">RX</span>
+    <div class="bar"><div class="bar-fill bar-net" id="hrx" style="width:0%"></div></div>
+    <span class="val" id="hrxv">-- KB/s</span>
+  </div>
+  <div class="row">
+    <span class="lbl">TX</span>
+    <div class="bar"><div class="bar-fill bar-net" id="htx" style="width:0%"></div></div>
+    <span class="val" id="htxv">-- KB/s</span>
+  </div>
+  <div class="row">
+    <span class="lbl">eMMC</span>
+    <div class="bar"><div class="bar-fill bar-emmc" id="hemmc" style="width:0%"></div></div>
+    <span class="val" id="hemmcv">-- GB</span>
+  </div>
+  <div class="uprow">
+    <span>UP <span id="hup">--:--:--</span></span>
+    <span>LOAD <span id="hload">-.-</span></span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ── RENDERER E CENA ──────────────────────────────────────────────────────────
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x030508);
+scene.fog = new THREE.FogExp2(0x030508, 0.02);
+
+var camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 200);
+var isMobile = innerWidth < 640;
+camera.position.set(isMobile ? 2 : -3, isMobile ? 24 : 14, isMobile ? 30 : 22);
+
+var renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
+document.getElementById('cc').appendChild(renderer.domElement);
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; 
+controls.dampingFactor = 0.06;
+controls.minDistance = 4; 
+controls.maxDistance = 65;
+controls.target.set(1, 0, -0.5);
+controls.update();
+
+// ── LUZES E AMBIENTE ────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x112233, 2.0));
+
+var sun = new THREE.DirectionalLight(0xaaddff, 1.8);
+sun.position.set(6, 30, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun);
+
+var fl = new THREE.DirectionalLight(0x00ffff, 0.8); 
+fl.position.set(-10, 12, -8); 
+scene.add(fl);
+
+var ri = new THREE.DirectionalLight(0x0044ff, 0.8); 
+ri.position.set(10, -3, -16); 
+scene.add(ri);
+
+var ul = new THREE.PointLight(0x0088ff, 2.0, 40); 
+ul.position.set(0, -2, 0); 
+scene.add(ul);
+
+// Grade Base
+var grid = new THREE.GridHelper(50, 50, 0x0088ff, 0x001133);
+grid.position.y = -3;
+grid.material.transparent = true;
+grid.material.opacity = 0.4;
+scene.add(grid);
+
+var floor = new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshStandardMaterial({color: 0x030508}));
+floor.rotation.x = -Math.PI/2;
+floor.position.y = -3.1;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ── GRUPO PRINCIPAL (A PLACA) ────────────────────────────────────────────────
+var board = new THREE.Group();
+scene.add(board);
+
+(function(){
+  var c=document.createElement('canvas'); c.width=512; c.height=64;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='rgba(0,0,0,0)'; ctx.fillRect(0,0,512,64);
+  ctx.fillStyle='rgba(0, 255, 255, 0.8)'; ctx.font='bold 22px monospace';
+  ctx.textAlign='center'; ctx.fillText('SISTEMA RK3229 - NÓ CENTRAL',256,40);
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(5.2,0.6),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false, blending: THREE.AdditiveBlending}));
+  m.rotation.x=-Math.PI/2; m.position.set(0,0.115,-1.8); board.add(m);
+})();
+
+// ── MATERIAIS GLOBAIS ───────────────────────────────────────────────────────
+var goldPad=new THREE.MeshStandardMaterial({color:0xe8c040,metalness:0.98,roughness:0.06});
+
+var portMetalMat = new THREE.MeshStandardMaterial({color: 0xb0b8c8, metalness: 0.85, roughness: 0.25});
+var portPlasticMat = new THREE.MeshStandardMaterial({color: 0x111111, roughness: 0.8});
+
+// Material Dourado Especial para Pinos Internos (com brilho emissivo)
+var portGoldMat = new THREE.MeshStandardMaterial({
+    color: 0xffcc00,
+    metalness: 1.0,
+    roughness: 0.1,
+    emissive: 0x885500,       
+    emissiveIntensity: 0.3    
+});
+
+var clickables=[];
+
+// ── SISTEMA DE TRILHAS ANIMADAS (DADOS) ─────────────────────────────────────
+var dataCanvas = document.createElement('canvas');
+dataCanvas.width = 64; dataCanvas.height = 64;
+var dataCtx = dataCanvas.getContext('2d');
+dataCtx.fillStyle = '#000000'; dataCtx.fillRect(0,0,64,64);
+var grad = dataCtx.createLinearGradient(0, 0, 0, 64);
+grad.addColorStop(0, "rgba(0, 255, 255, 0)");
+grad.addColorStop(0.5, "rgba(0, 255, 255, 1)");
+grad.addColorStop(1, "rgba(0, 255, 255, 0)");
+dataCtx.fillStyle = grad;
+dataCtx.fillRect(0, 0, 64, 64);
+
+var baseDataTex = new THREE.CanvasTexture(dataCanvas);
+baseDataTex.wrapS = THREE.RepeatWrapping;
+baseDataTex.wrapT = THREE.RepeatWrapping;
+
+var animatedTraces = [];
+var rj45Leds = []; // [{ambarMesh, ambarLight, greenMesh, greenLight}]
+
+// addTrace: roteamento em L com curva suave — evita cruzamentos diagonais
+// via: ponto intermediário opcional [vx, vz]; se omitido faz cotovelo automático
+function addTrace(x1, z1, x2, z2, w, y, via) {
+  y = y || 0.12;
+  w = w || 0.05;
+
+  // Monta lista de pontos 3D para a curva
+  var pts = [];
+  pts.push(new THREE.Vector3(x1, y, z1));
+
+  if (via) {
+    // waypoint(s) explícitos
+    for (var vi = 0; vi < via.length; vi++) {
+      pts.push(new THREE.Vector3(via[vi][0], y, via[vi][1]));
+    }
+  } else {
+    // cotovelo automático: vai horizontal até x2, depois vertical
+    pts.push(new THREE.Vector3(x2, y, z1));
+  }
+
+  pts.push(new THREE.Vector3(x2, y, z2));
+
+  var curve = new THREE.CatmullRomCurve3(pts);
+  var totalLen = curve.getLength();
+
+  // Textura animada clonada
+  var tex = baseDataTex.clone();
+  tex.needsUpdate = true;
+  tex.repeat.set(1, totalLen * 3);
+
+  var mat = new THREE.MeshBasicMaterial({
+    map: tex,
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.88,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  var segments = Math.max(12, Math.ceil(totalLen * 8));
+  var tube = new THREE.Mesh(new THREE.TubeGeometry(curve, segments, w * 0.4, 4, false), mat);
+  board.add(tube);
+
+  // nós nos terminais
+  var nodeMat = new THREE.MeshBasicMaterial({color: 0x00ffff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending});
+  var n1 = new THREE.Mesh(new THREE.CircleGeometry(w * 1.8, 8), nodeMat);
+  n1.rotation.x = -Math.PI/2; n1.position.set(x1, y+0.01, z1); board.add(n1);
+  var n2 = new THREE.Mesh(new THREE.CircleGeometry(w * 1.8, 8), nodeMat);
+  n2.rotation.x = -Math.PI/2; n2.position.set(x2, y+0.01, z2); board.add(n2);
+
+  animatedTraces.push(tex);
+}
+
+function addLabel(x,z,text,w){
+  w=w||1.2;
+  var c=document.createElement('canvas'); c.width=128; c.height=32;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='rgba(0,0,0,0)'; ctx.fillRect(0,0,128,32);
+  ctx.fillStyle='rgba(0, 255, 255, 0.7)'; ctx.font='bold 14px monospace';
+  ctx.textAlign='center'; ctx.fillText(text,64,21);
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(w,0.3),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false, blending: THREE.AdditiveBlending}));
+  m.rotation.x=-Math.PI/2; m.position.set(x,0.116,z); board.add(m);
+}
+
+// ── TEXTURE FACTORIES (GRAVAÇÃO A LASER) ────────────────────────────────────
+function chipTex(l1,l2,l3){
+  var c=document.createElement('canvas'); c.width=512; c.height=512;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,512,512);
+  ctx.fillStyle='#141414'; ctx.fillRect(55,55,402,402);
+  ctx.strokeStyle='rgba(255,255,255,0.025)'; ctx.lineWidth=1;
+  for(var i=0;i<512;i+=24){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,512);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(512,i);ctx.stroke();}
+  ctx.fillStyle='#a0a0a0'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  if(l1){ctx.font='bold italic 52px serif'; ctx.fillText(l1,256,120);}
+  if(l2){ctx.font='bold 42px sans-serif';   ctx.fillText(l2,256,210);}
+  if(l3){ctx.font='20px monospace';          ctx.fillText(l3,256,290);}
+  ctx.fillStyle='#555'; ctx.beginPath(); ctx.arc(46,458,14,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=3; ctx.strokeRect(4,4,504,504);
+  return new THREE.CanvasTexture(c);
+}
+
+function simpleTex(l1, l2, bg, fg){
+  bg=bg||'#111111'; fg=fg||'#777777';
+  var c=document.createElement('canvas'); c.width=256; c.height=256;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,256,256);
+  ctx.fillStyle=fg; ctx.font='bold 36px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; 
+  ctx.fillText(l1,128,100);
+  if(l2){
+      ctx.font='20px monospace'; 
+      ctx.fillStyle=fg+'aa'; 
+      ctx.fillText(l2,128,150);
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+function topMats(tex,sideColor){
+  sideColor=sideColor||0x0d0d0d;
+  var side=new THREE.MeshStandardMaterial({color:sideColor,roughness:0.52,metalness:0.08});
+  var top=new THREE.MeshStandardMaterial({map:tex,roughness:0.45,metalness:0.05});
+  return [side,side,top,side,side,side];
+}
+
+// ── COMPONENT BUILDERS (CHIPS) ────────────────────────────────────────────────
+function addIC(x,z,w,d,mats,name,desc,h){
+  h=h||0.3;
+  var bv=new THREE.Mesh(new THREE.BoxGeometry(w+0.1,h*0.16,d+0.1), new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:0.6}));
+  bv.position.set(x,0.111+h*0.08,z); board.add(bv);
+  var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats);
+  mesh.position.set(x,0.111+h/2,z); mesh.castShadow=true;
+  mesh.userData={name:name,description:desc};
+  board.add(mesh); clickables.push(mesh);
+  return mesh;
+}
+
+function addQFP(x,z,w,d,mats,name,desc){
+  var h=0.22;
+  var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mats);
+  mesh.position.set(x,0.111+h/2,z); mesh.castShadow=true;
+  mesh.userData={name:name,description:desc}; board.add(mesh); clickables.push(mesh);
+  var leadLR=new THREE.BoxGeometry(0.28,0.018,0.055);
+  var leadTB=new THREE.BoxGeometry(0.055,0.018,0.28);
+  for(var i=0;i<12;i++){
+    var t=i/11;
+    var lL=new THREE.Mesh(leadLR,goldPad); lL.rotation.y=Math.PI/2; lL.position.set(x-(w/2+0.09),0.107,z-d/2+d*t); board.add(lL);
+    var lR=new THREE.Mesh(leadLR,goldPad); lR.rotation.y=Math.PI/2; lR.position.set(x+(w/2+0.09),0.107,z-d/2+d*t); board.add(lR);
+    var lT=new THREE.Mesh(leadTB,goldPad); lT.position.set(x-w/2+w*t,0.107,z-(d/2+0.09)); board.add(lT);
+    var lB=new THREE.Mesh(leadTB,goldPad); lB.position.set(x-w/2+w*t,0.107,z+(d/2+0.09)); board.add(lB);
+  }
+  return mesh;
+}
+
+// ── COMPONENT BUILDERS (PORTAS HIPER-REALISTAS) ─────────────────────────────
+
+function addHDMI(x, z, rotY, name, desc) {
+  rotY = rotY || 0;
+  var grp = new THREE.Group();
+
+  var hitBox = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.65, 1.6), new THREE.MeshBasicMaterial({visible: false}));
+  hitBox.userData = {name: name, description: desc, root: grp};
+  grp.add(hitBox);
+  clickables.push(hitBox);
+
+  var shape = new THREE.Shape();
+  shape.moveTo(-0.75, -0.25);
+  shape.lineTo(0.75, -0.25);
+  shape.lineTo(0.75, 0.05);
+  shape.lineTo(0.55, 0.25);
+  shape.lineTo(-0.55, 0.25);
+  shape.lineTo(-0.75, 0.05);
+  shape.lineTo(-0.75, -0.25);
+
+  var hole = new THREE.Path();
+  hole.moveTo(-0.7, -0.2);
+  hole.lineTo(0.7, -0.2);
+  hole.lineTo(0.7, 0.02);
+  hole.lineTo(0.52, 0.2);
+  hole.lineTo(-0.52, 0.2);
+  hole.lineTo(-0.7, 0.02);
+  hole.lineTo(-0.7, -0.2);
+  shape.holes.push(hole);
+
+  var extrudeSettings = { depth: 1.2, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.01, bevelThickness: 0.02 };
+  var shieldGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  var shield = new THREE.Mesh(shieldGeo, portMetalMat);
+  shield.position.set(0, 0, -0.6); 
+  grp.add(shield);
+
+  var backPlate = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.45, 0.1), portPlasticMat);
+  backPlate.position.set(0, 0.0, -0.55);
+  grp.add(backPlate);
+
+  var core = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.08, 1.0), portPlasticMat);
+  core.position.set(0, -0.05, -0.1);
+  grp.add(core);
+
+  var pinGeo = new THREE.BoxGeometry(0.03, 0.02, 0.4);
+  for(var i = 0; i < 19; i++) {
+    var pin = new THREE.Mesh(pinGeo, portGoldMat);
+    var px = -0.6 + i * (1.2 / 18);
+    if(i % 2 === 0) { pin.position.set(px, -0.1, 0.25); } 
+    else { pin.position.set(px, 0.0, 0.25); }
+    grp.add(pin);
+  }
+
+  var clipGeo = new THREE.BoxGeometry(0.15, 0.02, 0.15);
+  var clip1 = new THREE.Mesh(clipGeo, portPlasticMat);
+  clip1.position.set(-0.35, -0.26, 0.2); grp.add(clip1);
+  var clip2 = new THREE.Mesh(clipGeo, portPlasticMat);
+  clip2.position.set(0.35, -0.26, 0.2); grp.add(clip2);
+
+  grp.position.set(x, 0.111 + 0.28, z);
+  grp.rotation.y = rotY;
+
+  grp.traverse(function(child) {
+    if (child.isMesh && child.material.visible !== false) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  board.add(grp);
+}
+
+function addRJ45(x, z, rotY, name, desc) {
+  rotY = rotY || 0;
+  var grp = new THREE.Group();
+
+  // Proporções reais 8P8C: 16.5mm × 13.5mm × 21mm
+  var W = 1.65, H = 1.35, D = 2.1;
+
+  var hitBox = new THREE.Mesh(new THREE.BoxGeometry(W+0.3,H+0.3,D+0.3), new THREE.MeshBasicMaterial({visible:false}));
+  hitBox.userData = {name:name, description:desc, root:grp};
+  grp.add(hitBox); clickables.push(hitBox);
+
+  // === BLINDAGEM METÁLICA EXTERNA (níquel brilhante) ===
+  var shellMat = new THREE.MeshStandardMaterial({color:0x8a9298, metalness:0.88, roughness:0.22});
+
+  // Abertura: 82% da largura, 63% da altura, na parte inferior da face
+  var oW = W * 0.82, oH = H * 0.63;
+  var ledH  = H - oH;           // tira LED no topo (37%)
+  var sideW = (W - oW) / 2;     // faixas laterais
+  var fZ    = D / 2;            // z da face frontal
+
+  // Face frontal em 4 peças (abertura aberta no centro-inferior)
+  var ff1 = new THREE.Mesh(new THREE.BoxGeometry(W, ledH, 0.06), shellMat);
+  ff1.position.set(0, H/2 - ledH/2, fZ); grp.add(ff1);
+  var ff2 = new THREE.Mesh(new THREE.BoxGeometry(sideW, oH, 0.06), shellMat);
+  ff2.position.set(-oW/2 - sideW/2, -H/2 + oH/2, fZ); grp.add(ff2);
+  var ff3 = new THREE.Mesh(new THREE.BoxGeometry(sideW, oH, 0.06), shellMat);
+  ff3.position.set( oW/2 + sideW/2, -H/2 + oH/2, fZ); grp.add(ff3);
+
+  // 5 paredes restantes
+  var sh = 0.055;
+  var wT = new THREE.Mesh(new THREE.BoxGeometry(W, sh, D), shellMat); wT.position.set(0, H/2, 0); grp.add(wT);
+  var wB = new THREE.Mesh(new THREE.BoxGeometry(W, sh, D), shellMat); wB.position.set(0,-H/2, 0); grp.add(wB);
+  var wL = new THREE.Mesh(new THREE.BoxGeometry(sh, H, D), shellMat); wL.position.set(-W/2,0, 0); grp.add(wL);
+  var wR = new THREE.Mesh(new THREE.BoxGeometry(sh, H, D), shellMat); wR.position.set( W/2,0, 0); grp.add(wR);
+  var wK = new THREE.Mesh(new THREE.BoxGeometry(W, H, sh),  shellMat); wK.position.set(0, 0,-D/2); grp.add(wK);
+
+  // === INTERIOR DA CAVIDADE — preto absoluto ===
+  var caveMat = new THREE.MeshBasicMaterial({color:0x010102});
+  var ci = 0.03; // espessura das paredes internas
+  var cF = new THREE.Mesh(new THREE.BoxGeometry(oW-0.02, ci, D-0.1), caveMat); // piso
+  cF.position.set(0,-H/2+ci/2, 0); grp.add(cF);
+  var cC = new THREE.Mesh(new THREE.BoxGeometry(oW-0.02, ci, D-0.1), caveMat); // teto interno
+  cC.position.set(0,-H/2+oH-ci/2, 0); grp.add(cC);
+  var cL = new THREE.Mesh(new THREE.BoxGeometry(ci, oH, D-0.1), caveMat);      // esquerda
+  cL.position.set(-oW/2+ci/2, -H/2+oH/2, 0); grp.add(cL);
+  var cR = new THREE.Mesh(new THREE.BoxGeometry(ci, oH, D-0.1), caveMat);      // direita
+  cR.position.set( oW/2-ci/2, -H/2+oH/2, 0); grp.add(cR);
+  var cBk = new THREE.Mesh(new THREE.BoxGeometry(oW-0.02, oH, ci), caveMat);   // fundo traseiro
+  cBk.position.set(0,-H/2+oH/2,-D/2+sh+ci); grp.add(cBk);
+
+  // === LÍNGUA PLÁSTICA — creme/bege, plataforma central ===
+  var tongMat = new THREE.MeshStandardMaterial({color:0xcfba8a, roughness:0.78, metalness:0.0});
+  var tH = oH * 0.20, tY = -H/2 + oH * 0.52, tDep = D * 0.56;
+  var tongue = new THREE.Mesh(new THREE.BoxGeometry(oW-0.1, tH, tDep), tongMat);
+  tongue.position.set(0, tY, fZ - tDep/2 - 0.02); grp.add(tongue);
+  // friso frontal da língua (realce)
+  var tEdgeMat = new THREE.MeshStandardMaterial({color:0xbaa870, roughness:0.82});
+  var tEdge = new THREE.Mesh(new THREE.BoxGeometry(oW-0.1, tH*0.28, 0.03), tEdgeMat);
+  tEdge.position.set(0, tY - tH*0.36, fZ - 0.03); grp.add(tEdge);
+
+  // === 8 PINOS DOURADOS — finos, com trecho horizontal + vertical curvado ===
+  var pW = 0.020; // largura do pino (muito fino)
+  var span = oW * 0.80;
+  var pSpc = span / 7;
+  for (var i = 0; i < 8; i++) {
+    var px = -span/2 + i * pSpc;
+    // Trecho horizontal sobre a língua
+    var pH = new THREE.Mesh(new THREE.BoxGeometry(pW, 0.012, tDep*0.72), portGoldMat);
+    pH.position.set(px, tY + tH/2 + 0.006, fZ - tDep*0.36 - 0.02); grp.add(pH);
+    // Trecho vertical (contato que desce para frente)
+    var pV = new THREE.Mesh(new THREE.BoxGeometry(pW, tH*0.65, 0.012), portGoldMat);
+    pV.position.set(px, tY - tH*0.08, fZ - 0.02);
+    pV.rotation.x = 0.22; // leve inclinação para frente como no real
+    grp.add(pV);
+  }
+
+  // === LEDs — janelas recuadas na faixa superior ===
+  var ledCY = H/2 - ledH/2;
+  var lwW = 0.18, lwH = ledH * 0.55;
+
+  // Caixilho recuado (reentrância na face)
+  var winMat = new THREE.MeshBasicMaterial({color:0x030305});
+  var w1 = new THREE.Mesh(new THREE.BoxGeometry(lwW+0.04, lwH+0.04, 0.05), winMat);
+  w1.position.set(-W*0.27, ledCY, fZ+0.01); grp.add(w1);
+  var w2 = new THREE.Mesh(new THREE.BoxGeometry(lwW+0.04, lwH+0.04, 0.05), winMat);
+  w2.position.set( W*0.27, ledCY, fZ+0.01); grp.add(w2);
+
+  // LED âmbar (velocidade 100M) — pisca ao transmitir dados
+  var mAmbar = new THREE.MeshStandardMaterial({color:0xff7700,emissive:0xdd4400,emissiveIntensity:3.0,roughness:0.04,transparent:true,opacity:0.96});
+  var ld1 = new THREE.Mesh(new THREE.BoxGeometry(lwW, lwH, 0.04), mAmbar);
+  ld1.position.set(-W*0.27, ledCY, fZ+0.04); grp.add(ld1);
+  var lg1 = new THREE.PointLight(0xff5500, 0.9, 3.5);
+  lg1.position.set(-W*0.27, ledCY, fZ+0.35); grp.add(lg1);
+
+  // LED verde (link/activity) — link ativo, pisca em bursts
+  var mGreen = new THREE.MeshStandardMaterial({color:0x00ff44,emissive:0x00cc33,emissiveIntensity:2.0,roughness:0.04,transparent:true,opacity:0.96});
+  var ld2 = new THREE.Mesh(new THREE.BoxGeometry(lwW, lwH, 0.04), mGreen);
+  ld2.position.set(W*0.27, ledCY, fZ+0.04); grp.add(ld2);
+  var lg2 = new THREE.PointLight(0x00cc33, 0.9, 3.5);
+  lg2.position.set(W*0.27, ledCY, fZ+0.35); grp.add(lg2);
+
+  // Registra LEDs para animação de dados
+  rj45Leds.push({ambarMesh:ld1, ambarLight:lg1, greenMesh:ld2, greenLight:lg2});
+
+  // === TABS SMD + PINOS DE PCB ===
+  var tabMat = new THREE.MeshStandardMaterial({color:0xd8dfe8, metalness:0.96, roughness:0.07});
+  [-W/2, W/2].forEach(function(tx) {
+    var sign = tx > 0 ? 1 : -1;
+    var tab = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.28), tabMat);
+    tab.position.set(tx + sign*0.08, -H/2, -D/2+0.22); grp.add(tab);
+    var leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.05), tabMat);
+    leg.position.set(tx + sign*0.12, -H/2-0.07, -D/2+0.22); grp.add(leg);
+  });
+
+  // Entalhe de retenção do cabo (centro inferior da abertura)
+  var notchMat = new THREE.MeshBasicMaterial({color:0x030305});
+  var notch = new THREE.Mesh(new THREE.BoxGeometry(oW*0.32, 0.07, 0.07), notchMat);
+  notch.position.set(0, -H/2+0.04, fZ); grp.add(notch);
+
+  grp.traverse(function(child) {
+    if (child.isMesh && child.material.visible !== false) {
+      child.castShadow = true; child.receiveShadow = true;
+    }
+  });
+
+  grp.position.set(x, 0.111 + H/2, z);
+  grp.rotation.y = rotY;
+  board.add(grp);
+}
+
+function addDCJack(x, z, rotY, name, desc) {
+  rotY = rotY || 0;
+  var grp = new THREE.Group();
+
+  var hitBox = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.8, 1.0), new THREE.MeshBasicMaterial({visible: false}));
+  hitBox.userData = {name: name, description: desc, root: grp};
+  grp.add(hitBox);
+  clickables.push(hitBox);
+
+  var shieldShape = new THREE.Shape();
+  shieldShape.absarc(0, 0, 0.4, 0, Math.PI * 2, false);
+  var shieldHole = new THREE.Path();
+  shieldHole.absarc(0, 0, 0.35, 0, Math.PI * 2, true);
+  shieldShape.holes.push(shieldHole);
+
+  var shieldGeo = new THREE.ExtrudeGeometry(shieldShape, { depth: 0.8, bevelEnabled: false });
+  var shield = new THREE.Mesh(shieldGeo, portMetalMat);
+  shield.position.set(0, 0, -0.4); 
+  grp.add(shield);
+
+  var plasticGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.1, 24);
+  var plasticBack = new THREE.Mesh(plasticGeo, portPlasticMat);
+  plasticBack.rotation.x = Math.PI / 2;
+  plasticBack.position.set(0, 0, -0.35); 
+  grp.add(plasticBack);
+
+  var pinGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 16);
+  var centerPin = new THREE.Mesh(pinGeo, portGoldMat);
+  centerPin.rotation.x = Math.PI / 2;
+  centerPin.position.set(0, 0, 0.0); 
+  grp.add(centerPin);
+
+  grp.position.set(x, 0.111 + 0.4, z);
+  grp.rotation.y = rotY;
+
+  grp.traverse(function(child) {
+    if (child.isMesh && child.material.visible !== false) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  board.add(grp);
+}
+
+// PORTA USB TIPO-A
+function addUSB(x, z, rotY, name, desc) {
+  rotY = rotY || 0;
+  var grp = new THREE.Group();
+
+  var hitBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.7, 1.8), new THREE.MeshBasicMaterial({visible: false}));
+  hitBox.userData = {name: name, description: desc, root: grp};
+  grp.add(hitBox);
+  clickables.push(hitBox);
+
+  var shape = new THREE.Shape();
+  shape.moveTo(-0.75, -0.3);
+  shape.lineTo(0.75, -0.3);
+  shape.lineTo(0.75, 0.3);
+  shape.lineTo(-0.75, 0.3);
+  shape.lineTo(-0.75, -0.3);
+
+  var hole = new THREE.Path();
+  hole.moveTo(-0.7, -0.25);
+  hole.lineTo(0.7, -0.25);
+  hole.lineTo(0.7, 0.25);
+  hole.lineTo(-0.7, 0.25);
+  hole.lineTo(-0.7, -0.25);
+  shape.holes.push(hole);
+
+  var extrudeSettings = { depth: 1.8, bevelEnabled: false };
+  var shieldGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  var shield = new THREE.Mesh(shieldGeo, portMetalMat);
+  shield.position.set(0, 0, -0.9); 
+  grp.add(shield);
+
+  var backM = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 0.1), portMetalMat); 
+  backM.position.set(0, 0, -0.85); 
+  grp.add(backM);
+
+  var tongue = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.2, 1.6), portPlasticMat);
+  tongue.position.set(0, -0.15, -0.1); 
+  grp.add(tongue);
+
+  for(var i = 0; i < 4; i++) {
+    var pin = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 1.2), portGoldMat);
+    pin.position.set(-0.45 + i * 0.3, -0.025, 0.05); 
+    grp.add(pin);
+  }
+
+  grp.position.set(x, 0.111 + 0.3, z);
+  grp.rotation.y = rotY;
+
+  grp.traverse(function(child) {
+    if (child.isMesh && child.material.visible !== false) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  board.add(grp);
+}
+
+function addAVJack(x, z, rotY, name, desc) {
+  rotY = rotY || 0;
+  var grp = new THREE.Group();
+
+  var hitBox = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 1.3), new THREE.MeshBasicMaterial({visible: false}));
+  hitBox.userData = {name: name, description: desc, root: grp};
+  grp.add(hitBox);
+  clickables.push(hitBox);
+
+  var shape = new THREE.Shape();
+  shape.moveTo(-0.35, -0.3);
+  shape.lineTo(0.35, -0.3);
+  shape.lineTo(0.35, 0.3);
+  shape.lineTo(-0.35, 0.3);
+  shape.lineTo(-0.35, -0.3);
+
+  var hole = new THREE.Path();
+  hole.absarc(0, 0, 0.18, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+
+  var extrudeSettings = { depth: 1.1, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.02, bevelThickness: 0.02 };
+  var bodyGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  var body = new THREE.Mesh(bodyGeo, portPlasticMat);
+  body.position.set(0, 0, -0.55);
+  grp.add(body);
+
+  var ringGeo = new THREE.TorusGeometry(0.19, 0.04, 12, 24);
+  var ring = new THREE.Mesh(ringGeo, portMetalMat);
+  ring.position.set(0, 0, 0.56);
+  grp.add(ring);
+
+  var backPlate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.1), portPlasticMat);
+  backPlate.position.set(0, 0, -0.55);
+  grp.add(backPlate);
+
+  for(var i = 0; i < 4; i++) {
+    var pin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.18, 0.05), portGoldMat);
+    pin.position.set(0, -0.12, -0.35 + (i * 0.25));
+    pin.rotation.x = Math.PI / 4; 
+    grp.add(pin);
+  }
+
+  grp.position.set(x, 0.111 + 0.35, z);
+  grp.rotation.y = rotY;
+
+  grp.traverse(function(child) {
+    if (child.isMesh && child.material.visible !== false) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  board.add(grp);
+}
+
+
+
+
+
+// ============================================================
+// CONSTRUINDO OS NÓS (CHIPS FLUTUANTES COM GRAVAÇÃO A LASER)
+// ============================================================
+
+// SoC — centro
+var socChip = addIC(0, 0, 3.0, 3.0, topMats(chipTex('Rockchip','RK3228A','CFKV22004  25')), 'Rockchip RK3228A — SoC', 'O núcleo de processamento flutuando na rede. Controla todo o fluxo de dados.', 0.38);
+// Luz de temperatura acima do SoC
+var socTempLight = new THREE.PointLight(0x00ff88, 0.0, 8);
+socTempLight.position.set(0, 3.0, 0);
+board.add(socTempLight);
+addLabel(0, 1.8, 'NÓ-CORE', 1.8);
+
+// LPDDR3 RAM — direita do SoC
+addIC(3.8, 0, 2.6, 2.0, topMats(simpleTex('LPDDR3','1GB 800MHz','#151515','#777777')), 'LPDDR3 RAM — 1 GB', 'Memória volátil ultrarrápida. Os pacotes de dados fluem diretamente daqui para o SoC.');
+addLabel(3.8, 1.2, 'NÓ-MEMÓRIA');
+
+// eMMC — acima da RAM
+addIC(3.8, 3.0, 2.2, 1.7, topMats(simpleTex('eMMC','8GB v4.5','#151515','#777777')), 'eMMC Flash — 8 GB', 'Armazenamento persistente. Retém os dados do sistema.');
+addLabel(3.8, 4.0, 'NÓ-ARMAZEM');
+
+// PMIC — esquerda do SoC
+addIC(-3.5, 0, 1.5, 1.3, topMats(simpleTex('PMIC','POWER','#0e0e0e','#777777'), 0x0e0e0e), 'PMIC — Matriz de Energia', 'Distribui a força vital (energia) por todas as trilhas do sistema holográfico.', 0.26);
+addLabel(-3.5, -0.8, 'NÓ-ENERGIA');
+
+// Wi-Fi — esquerda acima
+addIC(-3.5, 3.0, 1.4, 1.2, topMats(simpleTex('Wi-Fi','SSV6051','#12121a','#777777'), 0x12121a), 'Módulo Wi-Fi', 'Antenas etéreas que recebem ondas de rádio do ambiente externo.', 0.26);
+addLabel(-3.5, 3.8, 'NÓ-WIFI');
+
+// Ethernet PHY — esquerda abaixo
+addQFP(-3.5, -2.8, 1.55, 1.55, topMats(simpleTex('RTL8211','PHY 100M','#101010','#888888'), 0x101010), 'Ethernet PHY — 100 Mbps', 'Gerencia pacotes de rede externos que entram pelo túnel RJ45.');
+addLabel(-3.5, -3.7, 'NÓ-PHY');
+
+// Audio Codec — abaixo do SoC
+addIC(1.5, -3.2, 1.2, 1.0, topMats(simpleTex('AUDIO','CODEC','#0e0e0e','#777777'), 0x0e0e0e), 'Codec de Áudio', 'Converte dados em frequências audíveis.', 0.26);
+addLabel(1.5, -3.9, 'NÓ-AUDIO');
+
+// Conectores Externos — borda inferior (z=-4.8) e borda direita (x=6.2)
+addDCJack(-4.5, -4.8, Math.PI, 'Entrada DC — 5V', 'Ponto de origem da energia do sistema.');
+addRJ45(-2.2, -4.8, Math.PI, 'Portal RJ45', 'Túnel de comunicação ethernet com o mundo externo.');
+addHDMI(0.5, -4.8, Math.PI, 'Portal HDMI', 'Canal de saída visual de alta largura de banda com 19 pinos.');
+addAVJack(6.2, 0.0, Math.PI/2, 'Saída AV', 'Conector analógico de áudio e vídeo (TRRS).');
+addUSB(6.2, 2.0, Math.PI/2, 'Porta USB (OTG)', 'Porta USB tipo A hiper-realista. Usada para dados, periféricos ou injeção de firmware.');
+
+
+
+
+// ============================================================
+// REDE LÓGICA ANIMADA (FEIXES DE LUZ)
+// ============================================================
+
+// ── TRILHAS ROTEADAS EM L (sem cruzamentos diagonais) ───────────────────────
+// Chips e bordas:
+// SoC   (0,   0)   x:[-1.5,1.5]  z:[-1.5,1.5]
+// RAM   (3.8, 0)   x:[2.5, 5.1]  z:[-1.0,1.0]
+// eMMC  (3.8, 3.0) x:[2.7, 4.9]  z:[2.15,3.85]
+// PMIC  (-3.5,0)   x:[-4.25,-2.75] z:[-0.65,0.65]
+// WiFi  (-3.5,3.0) x:[-4.2,-2.8] z:[2.4,3.6]
+// PHY   (-3.5,-2.8)x:[-4.28,-2.73] z:[-3.58,-2.03]
+// Audio (1.5,-3.2) x:[0.9,2.1]   z:[-3.7,-2.7]
+// HDMI  (0.5,-4.8) borda z=-4.2 aprox
+// RJ45  (-2.2,-4.8)borda z=-4.1 aprox
+// DCJack(-4.5,-4.8)borda z=-4.4 aprox
+// AV    (6.2, 0.0) borda x=5.8
+// USB   (6.2, 2.0) borda x=5.8
+
+// 1. DDR: SoC→RAM — direto horizontal (mesma faixa z)
+addTrace(1.5, -0.3, 2.5, -0.3, 0.08);
+addTrace(1.5,  0.0, 2.5,  0.0, 0.08);
+addTrace(1.5,  0.3, 2.5,  0.3, 0.08);
+
+// 2. eMMC: SoC→eMMC — sobe pelo lado direito da RAM
+// vai para x=4.9 (borda direita RAM), depois sobe até eMMC
+addTrace(1.5, 1.2, 2.7, 2.15, 0.06, 0.12, [[2.2, 1.2], [2.7, 1.2]]);
+addTrace(1.5, 1.4, 4.0, 2.15, 0.06, 0.12, [[2.4, 1.4], [4.0, 1.4]]);
+
+// 3. Wi-Fi: SoC→Wi-Fi — sai pela esquerda, sobe
+addTrace(-1.5, 1.2, -2.8, 2.4, 0.05, 0.12, [[-1.5, 2.4]]);
+addTrace(-1.5, 1.5, -2.8, 2.7, 0.05, 0.12, [[-1.8, 1.5], [-1.8, 2.7]]);
+
+// 4. Energia: PMIC→SoC — horizontal direto
+addTrace(-2.75,  0.0, -1.5,  0.0, 0.10);
+addTrace(-2.75,  0.4, -1.5,  0.4, 0.10);
+// PMIC→RAM: desce abaixo do SoC depois vai direita
+addTrace(-2.75, -0.3, 2.5, -0.6, 0.07, 0.12, [[-2.75,-0.6]]);
+
+// 5. Ethernet: SoC→PHY — desce pelo lado esquerdo
+addTrace(-1.5, -0.5, -2.73, -2.03, 0.06, 0.12, [[-1.5,-2.03]]);
+// PHY→RJ45 — desce direto
+addTrace(-3.5, -3.58, -2.2, -4.4, 0.07, 0.12, [[-2.2,-3.58]]);
+
+// 6. Áudio: SoC→Audio Codec — desce direto
+addTrace(0.5, -1.5, 0.9, -2.7, 0.05, 0.12, [[0.9,-1.5]]);
+
+// 7. HDMI: SoC→HDMI — desce pela frente
+addTrace(0.2, -1.5, 0.5, -4.2, 0.08, 0.12, [[0.5,-1.5]]);
+
+// 8. Audio→AV Jack — sai pela direita do Audio, vai horizontal
+addTrace(2.1, -3.2, 5.8, 0.0, 0.05, 0.12, [[5.8,-3.2]]);
+
+// 9. SoC→USB — sai direita do SoC, sobe pela borda
+addTrace(1.5, -0.5, 5.8, 2.0, 0.05, 0.12, [[5.8,-0.5]]);
+
+// 10. DC Jack→PMIC — energia externa entra pelo DC e vai ao regulador
+addTrace(-4.5, -4.4, -3.5, -0.65, 0.10, 0.12, [[-4.5, -0.65]]);
+
+
+// ── INTERAÇÃO E CLIQUES ──────────────────────────────────────────────────────
+var ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
+var panel=document.getElementById('ip');
+var titleEl=document.getElementById('it'), descEl=document.getElementById('id');
+var activeChip=null;
+var origY=[];
+
+for(var oi=0;oi<clickables.length;oi++) {
+  var targetObj = clickables[oi].userData.root || clickables[oi];
+  origY[oi] = targetObj.position.y;
+}
+
+window.closePanel = function() {
+  panel.style.display='none';
+  if(activeChip){
+    var idx = clickables.indexOf(activeChip);
+    var target = activeChip.userData.root || activeChip;
+    target.position.y = origY[idx];
+    if(activeChip.userData.linkedMeshes) {
+        activeChip.userData.linkedMeshes.forEach(m => m.position.y -= 0.42);
+    }
+    activeChip = null;
+  }
+};
+
+window.addEventListener('click',function(e){
+  if(e.target.id === 'cb') return; 
+
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(mouse,camera);
+  var hits=ray.intersectObjects(clickables);
+  
+  if(activeChip){
+    var i2=clickables.indexOf(activeChip);
+    var target1 = activeChip.userData.root || activeChip;
+    target1.position.y = origY[i2]; 
+    if(activeChip.userData.linkedMeshes) {
+        activeChip.userData.linkedMeshes.forEach(m => m.position.y -= 0.42);
+    }
+    activeChip=null;
+  }
+  
+  if(hits.length>0){
+    var c=hits[0].object; activeChip=c;
+    var i3=clickables.indexOf(c);
+    var target2 = c.userData.root || c;
+    
+    target2.position.y = origY[i3] + 0.42;
+    if(c.userData.linkedMeshes) {
+        c.userData.linkedMeshes.forEach(m => m.position.y += 0.42);
+    }
+    
+    titleEl.textContent=c.userData.name;
+    var realDesc = descFromData(c.userData.name);
+    descEl.style.whiteSpace = 'pre-line';
+    descEl.textContent = realDesc || c.userData.description;
+    panel.style.display='block';
+  } else { 
+    panel.style.display='none'; 
+  }
+});
+
+window.addEventListener('mousemove',function(e){
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(mouse,camera);
+  renderer.domElement.style.cursor=ray.intersectObjects(clickables).length>0?'pointer':'default';
+});
+
+// ── LOOP DE ANIMAÇÃO ─────────────────────────────────────────────────────────
+var t=0;
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update(); 
+  t += 0.025;
+  
+  // Efeito Flutuação
+  board.position.y = Math.sin(t * 1.5) * 0.3;
+  
+  // Movimento de dados nas trilhas — velocidade varia com tráfego de rede
+  animatedTraces.forEach(function(tex) {
+     tex.offset.y -= traceSpeed;
+  });
+
+  // LEDs do RJ45 piscando como atividade de rede real
+  rj45Leds.forEach(function(led, idx) {
+    var offset = idx * 4.73; // fase diferente por conector
+
+    // LED ÂMBAR (TX/RX de pacotes): pisca em rajadas rápidas e irregulares
+    var burst1 = Math.sin(t * 1.1 + offset) > 0.2;         // janela de burst (~60% do tempo)
+    var flicker1 = Math.sin(t * 31.7 + offset * 2.3) > 0.0; // dentro do burst: pisca rápido
+    var packet1  = Math.sin(t * 8.3  + offset * 1.1) > 0.4; // pulsos de pacote individuais
+    var ambarOn  = (burst1 && (flicker1 || packet1)) ? 1.0 : 0.04;
+
+    led.ambarMesh.material.emissiveIntensity = ambarOn * 3.2;
+    led.ambarMesh.material.opacity = 0.20 + ambarOn * 0.78;
+    led.ambarLight.intensity = ambarOn * 1.1;
+
+    // LED VERDE (Link): fica aceso continuamente, pisca brevemente quando envia pacote
+    var linkSolid  = 0.85 + Math.sin(t * 0.9 + offset) * 0.12; // leve respiração
+    var actBlink   = Math.sin(t * 22.0 + offset * 3.1) > 0.90;  // curtos apagamentos em atividade
+    var greenOn    = actBlink ? 0.06 : linkSolid;
+
+    led.greenMesh.material.emissiveIntensity = greenOn * 2.8;
+    led.greenMesh.material.opacity = 0.20 + greenOn * 0.78;
+    led.greenLight.intensity = greenOn * 0.95;
+  });
+  
+  renderer.render(scene,camera);
+}
+
+window.addEventListener('resize',function(){
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+// ── DADOS REAIS DA TV BOX ────────────────────────────────────────────────────
+var sysData = {};
+var netMaxKbps = 100; // escala dinâmica para barras de rede
+
+function pct(v,max){return Math.min(100,Math.round(v/max*100));}
+
+function tempColor(c){
+  if(c < 55) return '#00ff88';
+  if(c < 70) return '#ffcc00';
+  return '#ff4422';
+}
+
+function updateHUD(d){
+  var cpuAvg = d.cpu.usage.reduce(function(a,b){return a+b;},0) / d.cpu.usage.length;
+  var tmp = d.cpu.temp_c;
+
+  document.getElementById('hcpu').style.width = cpuAvg.toFixed(0)+'%';
+  document.getElementById('hcpuv').textContent = cpuAvg.toFixed(0);
+
+  var tc = document.getElementById('htmp');
+  tc.textContent = tmp+'°C';
+  tc.style.color = tempColor(tmp);
+  tc.style.background = 'rgba(0,0,0,.3)';
+
+  var ramPct = d.memory.percent;
+  document.getElementById('hram').style.width = ramPct+'%';
+  document.getElementById('hramv').textContent = d.memory.used_mb.toFixed(0)+' MB';
+
+  var rx = d.network.rx_kbps, tx = d.network.tx_kbps;
+  netMaxKbps = Math.max(netMaxKbps, rx*1.2, tx*1.2, 100);
+  document.getElementById('hrx').style.width  = pct(rx, netMaxKbps)+'%';
+  document.getElementById('hrxv').textContent = rx > 1024 ? (rx/1024).toFixed(1)+' MB/s' : rx.toFixed(0)+' KB/s';
+  document.getElementById('htx').style.width  = pct(tx, netMaxKbps)+'%';
+  document.getElementById('htxv').textContent = tx > 1024 ? (tx/1024).toFixed(1)+' MB/s' : tx.toFixed(0)+' KB/s';
+
+  var sp = d.storage.percent||0;
+  document.getElementById('hemmc').style.width  = sp+'%';
+  document.getElementById('hemmcv').textContent = (d.storage.used_gb||0)+'/'+(d.storage.total_gb||0)+' GB';
+
+  document.getElementById('hup').textContent   = d.uptime.formatted;
+  document.getElementById('hload').textContent = d.load['1m'].toFixed(2);
+
+  // Luz de temperatura no SoC
+  var tc2 = tmp;
+  var tNorm = Math.max(0, Math.min(1, (tc2-40)/50));
+  var r = Math.round(tNorm*255), g = Math.round((1-tNorm)*200);
+  socTempLight.color.setRGB(r/255, g/255, 0.1);
+  socTempLight.intensity = 0.3 + tNorm * 1.2;
+}
+
+function descFromData(name){
+  var d = sysData;
+  if(!d.cpu) return null;
+  var n = name || '';
+  if(n.indexOf('SoC') >= 0 || n.indexOf('RK32') >= 0){
+    var avg = (d.cpu.usage.reduce(function(a,b){return a+b;},0)/d.cpu.usage.length).toFixed(1);
+    return 'CPU: '+avg+'% avg | Temp: '+d.cpu.temp_c+'°C\n'
+      +'Núcleos: '+d.cpu.usage.map(function(v){return v.toFixed(0)+'%';}).join(' ')+'\n'
+      +'Load: '+d.load['1m'].toFixed(2)+' / '+d.load['5m'].toFixed(2)+' / '+d.load['15m'].toFixed(2);
+  }
+  if(n.indexOf('RAM') >= 0){
+    return 'Total: '+d.memory.total_mb+' MB\nUsado: '+d.memory.used_mb+' MB ('+d.memory.percent+'%)\nLivre: '+d.memory.free_mb+' MB';
+  }
+  if(n.indexOf('PHY') >= 0 || n.indexOf('RJ45') >= 0){
+    return 'RX: '+(d.network.rx_kbps).toFixed(1)+' KB/s ('+d.network.rx_mb+' MB total)\n'
+      +'TX: '+(d.network.tx_kbps).toFixed(1)+' KB/s ('+d.network.tx_mb+' MB total)';
+  }
+  if(n.indexOf('eMMC') >= 0){
+    return 'Usado: '+d.storage.used_gb+' GB / '+d.storage.total_gb+' GB ('+d.storage.percent+'%)\nLivre: '+d.storage.free_gb+' GB';
+  }
+  if(n.indexOf('PMIC') >= 0 || n.indexOf('DC') >= 0){
+    return 'Sistema ativo há '+d.uptime.formatted+'\nLoad médio: '+d.load['1m'].toFixed(2);
+  }
+  return null;
+}
+
+function fetchSysData(){
+  fetch('/api/')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      sysData = d;
+      updateHUD(d);
+      // Velocidade das trilhas varia com tráfego de rede
+      var netSpeed = (d.network.rx_kbps + d.network.tx_kbps);
+      traceSpeed = 0.018 + Math.min(netSpeed / 800, 0.06);
+    })
+    .catch(function(){/* sem dados = mantém estado anterior */});
+}
+
+var traceSpeed = 0.025;
+fetchSysData();
+setInterval(fetchSysData, 2000);
+
+// ── TERMINAL AO VIVO ─────────────────────────────────────────────────────────
+var termOpen = false;
+var termInterval = null;
+
+// Esconder botão reboot se acessado via domínio público
+(function(){
+  var local = location.hostname === '192.168.2.119' || location.hostname === 'localhost';
+  if (!local) {
+    var btn = document.getElementById('reboot-btn');
+    if (btn) btn.style.display = 'none';
+  }
+  // Instruções adaptadas para mobile
+  if (isMobile) {
+    var ins = document.getElementById('ins');
+    if (ins) ins.innerHTML = 'Arraste &nbsp;|&nbsp; Pinça p/ zoom &nbsp;|&nbsp; Toque nos chips';
+  }
+})();
+
+function toggleTerm() {
+  termOpen = !termOpen;
+  var panel = document.getElementById('term-panel');
+  var btn   = document.getElementById('term-btn');
+  if (termOpen) {
+    panel.style.display = 'block';
+    btn.textContent = '▼ TERMINAL';
+    fetchMotd();
+    termInterval = setInterval(fetchMotd, 3000);
+  } else {
+    panel.style.display = 'none';
+    btn.textContent = '▶ TERMINAL';
+    clearInterval(termInterval);
+  }
+}
+
+function confirmReboot() {
+  var body = document.getElementById('term-body');
+  body.innerHTML = '\n <span style="color:#ffff55">Confirmar reinicialização do sistema?</span>\n\n'
+    + ' <button onclick="doReboot()" style="background:rgba(255,50,50,.25);border:1px solid #ff5555;'
+    + 'color:#ff8888;font-family:monospace;padding:4px 14px;border-radius:4px;cursor:pointer;margin-right:10px">'
+    + 'SIM, REINICIAR</button>'
+    + ' <button onclick="fetchMotd()" style="background:rgba(80,80,80,.2);border:1px solid #555;'
+    + 'color:#aaa;font-family:monospace;padding:4px 14px;border-radius:4px;cursor:pointer">'
+    + 'CANCELAR</button>';
+}
+
+function doReboot() {
+  var body = document.getElementById('term-body');
+  body.innerHTML = '\n <span style="color:#ff5555">Enviando comando reboot...</span>';
+  fetch('/api/reboot', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      body.innerHTML = '\n <span style="color:#ffaa00">Sistema reiniciando...</span>\n\n'
+        + ' <span style="color:#777">A página ficará indisponível por ~30 segundos.</span>\n\n'
+        + ' <span style="color:#555">Reconectando automaticamente...</span>';
+      // Tentar reconectar após 35s
+      setTimeout(function(){
+        body.innerHTML = '\n <span style="color:#55ffff">Tentando reconectar...</span>';
+        fetchMotd();
+      }, 35000);
+    })
+    .catch(function(){
+      body.innerHTML = '\n <span style="color:#ff5555">Erro ao enviar comando. Verifique a API.</span>';
+    });
+}
+
+function fetchMotd() {
+  var status = document.getElementById('term-status');
+  fetch('/api/motd')
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      document.getElementById('term-body').innerHTML =
+        html + '\n<span id="term-cursor"></span>';
+      status.style.color = '#28c840';
+      status.title = 'conectado';
+    })
+    .catch(function() {
+      status.style.color = '#ff5f57';
+      status.title = 'sem conexão';
+    });
+}
+
+animate();
+</script>
+</body>
+</html>
