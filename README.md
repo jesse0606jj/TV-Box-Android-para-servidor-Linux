@@ -28,10 +28,10 @@ Guia completo e documentado de como instalar o Armbian em um TV Box com chip RK3
 - Cartão microSD de 16 GB ou mais
 - Cabo de rede (ethernet)
 - PC com Windows
-- Balena Etcher — https://www.balena.io/etcher
-- MiniTool Partition Wizard Free — https://www.partitionwizard.com
-- Multitool para RK322x — https://www.mediafire.com/file/2wzb3y4er4zdmld/multitool.img/file
-- Imagem do Armbian para rk322x-box — https://github.com/armbian/community/releases
+- Balena Etcher: https://www.balena.io/etcher
+- MiniTool Partition Wizard Free: https://www.partitionwizard.com
+- Multitool para RK322x: https://www.mediafire.com/file/2wzb3y4er4zdmld/multitool.img/file
+- Imagem do Armbian para rk322x-box: https://github.com/armbian/community/releases
 
 ---
 
@@ -164,7 +164,7 @@ Exemplo de saída ao concluir:
 
 > **Atenção:** Verifique os dispositivos antes de executar. No Multitool, a eMMC geralmente é `/dev/mmcblk2` e o cartão SD é `/dev/mmcblk0`. Confirme com `lsblk` antes de gravar.
 
-Após concluir, pressione `Ctrl+D` para sair do bash e voltar ao menu do Multitool. Selecione **9 — Shutdown**, remova o cartão SD e ligue o TV Box.
+Após concluir, pressione `Ctrl+D` para sair do bash e voltar ao menu do Multitool. Selecione **9 Shutdown**, remova o cartão SD e ligue o TV Box.
 
 ---
 
