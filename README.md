@@ -40,7 +40,7 @@ Abra o Balena Etcher, selecione o arquivo `multitool.img.xz` e grave no cartão 
 - **BOOTSTRAP (D:)** — 64 MB — partição de boot, não mexa
 - **MULTITOOL (E:)** — ~378 MB — partição de trabalho
 
-O restante do espaço fica não alocado e invisível para o Windows.
+O restante do espaço fica não alocado e invisível para o Windows. Não é necessário expandir a partição — a imagem do Armbian será transferida diretamente pela rede, sem precisar ser copiada para o cartão SD.
 
 ---
 
@@ -66,9 +66,9 @@ O menu do Multitool oferece as seguintes opções:
 
 ## 4. Conectar via SSH
 
-Conecte o TV Box ao roteador via cabo ethernet. No menu do Multitool, selecione a opção **4 Drop to Bash shell**.
+Conecte o TV Box ao roteador via cabo ethernet. No menu do Multitool, selecione a opção **4 Drop to Bash shell**. Um bash local abrirá na tela da TV (via HDMI).
 
-Para obter o IP do TV Box, execute no terminal:
+**No bash local (visível na TV)**, descubra o IP do TV Box:
 
 ```bash
 ip addr
@@ -81,9 +81,9 @@ dhclient eth0
 ip addr
 ```
 
-O IP será exibido na interface eth0, no formato 192.168.x.x.
+O IP será exibido na interface eth0, no formato 192.168.x.x. Anote esse IP.
 
-No PC com Windows, abra o CMD ou PowerShell e conecte:
+**No PC com Windows**, abra o CMD ou PowerShell e conecte via SSH usando o IP anotado:
 
 ```bash
 ssh root@192.168.x.x
@@ -152,7 +152,7 @@ Exemplo de saída ao concluir:
 
 > **Atenção:** Verifique os dispositivos antes de executar. No Multitool, a eMMC geralmente é `/dev/mmcblk2` e o cartão SD é `/dev/mmcblk0`. Confirme com `lsblk` antes de gravar.
 
-Após concluir, pressione `Ctrl+D` para sair do bash e voltar ao menu do Multitool. Selecione **9 Shutdown**, remova o cartão SD e ligue o TV Box.
+Após concluir, pressione `Ctrl+D` para encerrar a sessão SSH. Na TV (bash local), pressione `Ctrl+D` novamente para voltar ao menu do Multitool. Selecione **9 Shutdown**, remova o cartão SD e ligue o TV Box.
 
 ---
 
