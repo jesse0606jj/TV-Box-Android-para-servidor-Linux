@@ -40,7 +40,7 @@ Abra o Balena Etcher, selecione o arquivo `multitool.img.xz` e grave no cartão 
 - **BOOTSTRAP (D:)** — 64 MB — partição de boot, não mexa
 - **MULTITOOL (E:)** — ~378 MB — partição de trabalho
 
-O restante do espaço fica não alocado e invisível para o Windows. Não é necessário expandir a partição — a imagem do Armbian será transferida diretamente pela rede, sem precisar ser copiada para o cartão SD.
+O restante do espaço fica não alocado e invisível para o Windows. Não é necessário expandir a partição, a imagem do Armbian será transferida diretamente pela rede, sem precisar ser copiada para o cartão SD.
 
 ---
 
