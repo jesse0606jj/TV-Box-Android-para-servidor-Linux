@@ -12,13 +12,12 @@ Guia completo e documentado de como instalar o Armbian em um TV Box com chip RK3
 
 1. [O que você vai precisar](#1-o-que-você-vai-precisar)
 2. [Gravar o Multitool no cartão SD](#2-gravar-o-multitool-no-cartão-sd)
-3. [Expandir a partição MULTITOOL](#3-expandir-a-partição-multitool)
-4. [Bootar o Multitool no TV Box](#4-bootar-o-multitool-no-tv-box)
-5. [Conectar via SSH](#5-conectar-via-ssh)
-6. [Transferir a imagem via servidor HTTP](#6-transferir-a-imagem-via-servidor-http)
-7. [Gravar a imagem na eMMC via dd](#7-gravar-a-imagem-na-emmc-via-dd)
-8. [Configurar o Armbian](#8-configurar-o-armbian)
-9. [Solução de problemas](#9-solução-de-problemas)
+3. [Bootar o Multitool no TV Box](#3-bootar-o-multitool-no-tv-box)
+4. [Conectar via SSH](#4-conectar-via-ssh)
+5. [Transferir a imagem via servidor HTTP](#5-transferir-a-imagem-via-servidor-http)
+6. [Gravar a imagem na eMMC via dd](#6-gravar-a-imagem-na-emmc-via-dd)
+7. [Configurar o Armbian](#7-configurar-o-armbian)
+8. [Solução de problemas](#8-solução-de-problemas)
 
 ---
 
@@ -29,7 +28,6 @@ Guia completo e documentado de como instalar o Armbian em um TV Box com chip RK3
 - Cabo de rede (ethernet)
 - PC com Windows
 - Balena Etcher: https://www.balena.io/etcher
-- MiniTool Partition Wizard Free: https://www.partitionwizard.com
 - Multitool para RK322x: https://www.mediafire.com/file/2wzb3y4er4zdmld/multitool.img/file
 - Imagem do Armbian para rk322x-box: https://github.com/armbian/community/releases
 
@@ -46,17 +44,7 @@ O restante do espaço fica não alocado e invisível para o Windows.
 
 ---
 
-## 3. Expandir a partição MULTITOOL
-
-A partição MULTITOOL original tem apenas ~378 MB, insuficiente para armazenar a imagem do Armbian. É necessário expandi-la para usar o espaço livre do cartão.
-
-Abra o MiniTool Partition Wizard, localize o cartão SD na lista de discos, clique com botão direito na partição MULTITOOL e selecione Estender. Arraste o slider para ocupar todo o espaço disponível e clique em Aplicar.
-
-> Atenção: não abra o cartão SD no Windows Explorer após a expansão. Ferramentas como "Verificar e Corrigir" podem corromper a partição NTFS do Multitool.
-
----
-
-## 4. Bootar o Multitool no TV Box
+## 3. Bootar o Multitool no TV Box
 
 Insira o cartão SD no TV Box com ele desligado. Ligue o TV Box, após alguns segundos o LED azul começa a piscar e o menu do Multitool aparece na tela.
 
@@ -76,7 +64,7 @@ O menu do Multitool oferece as seguintes opções:
 
 ---
 
-## 5. Conectar via SSH
+## 4. Conectar via SSH
 
 Conecte o TV Box ao roteador via cabo ethernet. No menu do Multitool, selecione a opção **4 Drop to Bash shell**.
 
@@ -109,7 +97,7 @@ Welcome to Multitool SSH session!
 
 ---
 
-## 6. Transferir a imagem via servidor HTTP
+## 5. Transferir a imagem via servidor HTTP
 
 O Multitool não possui wget, curl, nc, sftp ou python. A solução é criar um servidor HTTP no PC com Windows e usar o bash do Multitool para baixar via `/dev/tcp`.
 
@@ -136,7 +124,7 @@ O `od -A d -c` exibe o dump em decimal. Procure a sequência `\r \n \r \n` (fim 
 
 ---
 
-## 7. Gravar a imagem na eMMC via dd
+## 6. Gravar a imagem na eMMC via dd
 
 Com o offset do cabeçalho identificado (no exemplo abaixo, 208 bytes), execute o stream direto para a eMMC:
 
@@ -168,7 +156,7 @@ Após concluir, pressione `Ctrl+D` para sair do bash e voltar ao menu do Multito
 
 ---
 
-## 8. Configurar o Armbian
+## 7. Configurar o Armbian
 
 No primeiro boot, o sistema pedirá para criar a senha do root. A senha deve ter no mínimo 8 caracteres. Depois crie um usuário comum.
 
@@ -200,13 +188,10 @@ reboot
 
 ---
 
-## 9. Solução de problemas
+## 8. Solução de problemas
 
 **O Multitool não boota pelo cartão SD**
 Pressione o botão de reset AV com um clipe enquanto liga o TV Box.
-
-**Erro "There has been an error mounting the MULTITOOL partition"**
-A partição MULTITOOL ficou corrompida após a expansão no Windows. O menu do Multitool ainda funciona normalmente. Use o método de transferência via SSH descrito neste guia.
 
 **IP 169.254.x.x na interface eth0**
 O TV Box não recebeu IP via DHCP. Verifique o cabo de rede e execute `dhclient eth0`.
